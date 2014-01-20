@@ -6,7 +6,7 @@ var app = express();
 // Global Configuration
 var port = 8080;
 var clientID = '<CLIENT_ID>';
-var clientSecret = 'CLIENT_SECRET_CODE';
+var clientSecret = '<CLIENT_SECRET_CODE>';
 var callbackURL = '/auth/facebook/callback';
 
 // Passport Module Configuration
