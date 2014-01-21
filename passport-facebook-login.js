@@ -5,8 +5,8 @@ var app = express();
 
 // Global Configuration
 var port = 8080;
-var clientID = '<CLIENT_ID>';
-var clientSecret = '<CLIENT_SECRET_CODE>';
+var clientID = '';
+var clientSecret = '';
 var callbackURL = '/auth/facebook/callback';
 
 // Passport Module Configuration
@@ -30,9 +30,10 @@ passport.deserializeUser(function(obj, done) {
 passport.use(new FacebookStrategy({
     clientID: clientID,
     clientSecret: clientSecret,
-    callbackURL: callbackURL
+    callbackURL: callbackURL,
+    passReqToCallback: true
   },
-  function(accessToken, refreshToken, profile, done) {
+  function(req, accessToken, refreshToken, profile, done) {
     //User.findOrCreate(..., function(err, user) {
     //  if (err) { return done(err); }
     //  done(null, user);
@@ -59,7 +60,7 @@ passport.use(new FacebookStrategy({
     }).on('error', function(e) {
       console.log("error: " + e.message);
     });
-
+    req.session.profile = profile;
     return done(null, profile);
   }
 ));
@@ -67,11 +68,11 @@ passport.use(new FacebookStrategy({
 // Server Configuration
 app.configure(function() {
   //app.use(express.static('public'));
-  //app.use(express.cookieParser());
+  app.use(express.cookieParser());
   //app.use(express.bodyParser());
-  //app.use(express.session({ secret: 'keyboard cat' }));
+  app.use(express.session({ secret: '1234567890' }));
   app.use(passport.initialize());
-  //app.use(passport.session());
+  app.use(passport.session());
   //app.use(app.router);
 });
 
@@ -85,11 +86,20 @@ app.get('/login', function(req, res) {
 });
 
 app.get('/successed', function(req, res) {
-  res.send('Successed');
+  var body = '';
+  if (req.session.profile)
+    body += 'Hi, ' + req.session.profile.displayName;
+  else
+    body += 'nothing...';
+  res.send(body);
 });
 
 app.get('/failed', function(req, res) {
   res.send('Failed');
+});
+
+app.get('/session', function(req, res) {
+  res.send(JSON.stringify(req.session));
 });
 
 // Redirect the user to Facebook for authentication.  When complete,
