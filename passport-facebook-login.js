@@ -2,6 +2,9 @@
 var https = require('https');
 var express = require('express');
 var app = express();
+var redis = require('redis');
+var pub = redis.createClient();
+var uuid = require('uuid');
 
 // Global Configuration
 var port = 8080;
@@ -77,6 +80,23 @@ app.configure(function() {
 
 app.get('/', function(req, res) {
   res.send('Hello World');
+});
+
+app.get('/sub', function(req, res) {
+  var sub = redis.createClient();
+  var channel = uuid.v1();
+
+  sub.subscribe(channel);
+  sub.on('message', function(channel, message) {
+    console.log(channel + ': ' + message);
+  });
+
+  res.send('Subscribe: ' + channel);
+});
+
+app.get('/pub/:channel', function(req, res) {
+  pub.publish(req.params.channel, 'do pub');
+  res.send('Publish');
 });
 
 app.get('/login', function(req, res) {
