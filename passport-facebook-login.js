@@ -102,14 +102,30 @@ app.get('/pub/:channel', function(req, res) {
 
 app.get('/login', function(req, res) {
   //res.send('Login');
+  req.session.uuid = uuid.v1();
+
   res.redirect('/auth/facebook');
+});
+
+app.get('/check', function(req, res) {
+  console.log(req.session.uuid);
+
+  var channel = req.session.uuid;
+  var sub = redis.createClient();
+  sub.subscribe(channel);
+  sub.on('message', function(message){
+    res.send(channel + ': ' + message);
+  })
 });
 
 app.get('/successed', function(req, res) {
   var body = '';
-  if (req.session.profile)
+  if (req.session.profile) {
     body += 'Hi, ' + req.session.profile.displayName;
-  else
+
+    var channel = req.session.uuid;
+    pub.publish(channel, 'done');
+  } else
     body += 'nothing...';
   res.send(body);
 });
